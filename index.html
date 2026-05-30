@@ -25,6 +25,7 @@
         .btn-clear {
             background-color: var(--danger); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;
         }
+        .btn-clear:hover { background-color: #c0392b; }
         .card {
             background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
@@ -32,7 +33,7 @@
             display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; background: #e9ecef;
         }
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.95em; }
-        input[type="number"] {
+        input[type="number"], input[type="text"] {
             width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1em;
         }
         .grid-inputs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px; }
@@ -41,6 +42,7 @@
         }
         .exact-number { font-size: 1.8em; font-weight: bold; color: #f1c40f; display: block; margin-top: 5px; }
         .alert-msg { color: #e74c3c; font-size: 0.9em; font-weight: bold; display: block; margin-top: 5px;}
+        .dynamic-avg { font-size: 0.85em; margin-top: 5px; color: #555; background: #f1f2f6; padding: 5px; border-radius: 4px; display: inline-block; }
         
         @media (max-width: 600px) { .grid-inputs { grid-template-columns: 1fr; } }
     </style>
@@ -49,11 +51,12 @@
 
 <div class="container">
     <div class="header-actions">
-        <h1>Ponderador Final</h1>
+        <h1>Ponderador de Calificaciones</h1>
         <button class="btn-clear" onclick="clearData()">Borrar Historial</button>
     </div>
     <p style="text-align: center; font-size: 1.1em;">Meta mínima para aprobar: <strong>7.50</strong></p>
 
+    <!-- Panel de Pesos Generales -->
     <div class="card config-panel">
         <div style="grid-column: 1 / -1; text-align: center;">
             <h3 style="margin-top: 0;">Valor de los Rubros (Deben sumar 10 puntos)</h3>
@@ -64,11 +67,11 @@
         </div>
         <div>
             <label>Avance de Proyecto</label>
-            <input type="number" id="weight-avance" value="1.5" step="0.1" onchange="calculateAll()">
+            <input type="number" id="weight-avance" value="1.5" step="0.1" oninput="calculateAll()">
         </div>
         <div>
             <label>Proyecto Final</label>
-            <input type="number" id="weight-final" value="1.5" step="0.1" onchange="calculateAll()">
+            <input type="number" id="weight-final" value="1.5" step="0.1" oninput="calculateAll()">
         </div>
         <div>
             <label>Regulación</label>
@@ -80,6 +83,7 @@
         </div>
     </div>
 
+    <!-- Contenedor de Materias -->
     <div id="subjects-container"></div>
 </div>
 
@@ -97,24 +101,28 @@
         const html = `
             <div class="card">
                 <h2 style="color: var(--accent); margin-top: 0;">${subject}</h2>
-                <p style="font-size: 0.85em; color: #666;">Ingresa tu calificación del 0 al 10 en los rubros que ya te hayan evaluado.</p>
+                <p style="font-size: 0.85em; color: #666;">Ingresa tu calificación del 0 al 10 en los rubros correspondientes.</p>
                 
                 <div class="grid-inputs">
-                    <div>
-                        <label>Promedio de Actividades/Cuestionarios</label>
-                        <input type="number" min="0" max="10" id="subj-${index}-act" class="grade-input" onchange="calculateAll()" placeholder="Ej: 9.5">
+                    <div style="background: #fdfdfd; border: 1px dashed #ccc; padding: 10px; border-radius: 5px;">
+                        <label style="color: var(--primary);">Actividades, Cuestionarios y Foros</label>
+                        <p style="font-size: 0.75em; margin: 0 0 8px 0; color: #7f8c8d;">Separa las calificaciones sumando con un <strong>+</strong></p>
+                        <input type="text" id="subj-${index}-act" class="grade-input" oninput="calculateAll()" placeholder="Ej: 10 + 9.5 + 8">
+                        <div class="dynamic-avg">
+                            Promedio calculado: <strong id="subj-${index}-act-promedio" style="color: var(--accent);">0.00</strong>
+                        </div>
                     </div>
                     <div>
                         <label>Avance del Proyecto Final</label>
-                        <input type="number" min="0" max="10" id="subj-${index}-avance" class="grade-input" onchange="calculateAll()" placeholder="Ej: 10">
+                        <input type="number" min="0" max="10" id="subj-${index}-avance" class="grade-input" oninput="calculateAll()" placeholder="Ej: 10">
                     </div>
                     <div>
                         <label>Actividad de Regulación</label>
-                        <input type="number" min="0" max="10" id="subj-${index}-reg" class="grade-input" onchange="calculateAll()" placeholder="Ej: 8">
+                        <input type="number" min="0" max="10" id="subj-${index}-reg" class="grade-input" oninput="calculateAll()" placeholder="Ej: 8">
                     </div>
                     <div>
                         <label>Puntos Extra Obtenidos</label>
-                        <input type="number" min="0" max="10" id="subj-${index}-extra" class="grade-input" onchange="calculateAll()" placeholder="Ej: 10">
+                        <input type="number" min="0" max="10" id="subj-${index}-extra" class="grade-input" oninput="calculateAll()" placeholder="Ej: 10">
                     </div>
                 </div>
 
@@ -143,13 +151,27 @@
         const wFinal = parseFloat(document.getElementById('weight-final').value) || 0;
 
         subjects.forEach((_, index) => {
-            // Leer calificaciones capturadas (Escala 0-10)
-            const valAct = parseFloat(document.getElementById(`subj-${index}-act`).value) || 0;
+            // 1. Lógica especial para el campo de actividades (Sumatoria con +)
+            const actStr = document.getElementById(`subj-${index}-act`).value;
+            // Separar por el signo '+', convertir a números y filtrar los que no son válidos
+            const actGrades = actStr.split('+').map(n => parseFloat(n.trim())).filter(n => !isNaN(n));
+            
+            let valAct = 0;
+            if (actGrades.length > 0) {
+                // Sacar el promedio de las calificaciones ingresadas
+                const sum = actGrades.reduce((a, b) => a + b, 0);
+                valAct = sum / actGrades.length;
+            }
+            
+            // Mostrar el promedio calculado al usuario
+            document.getElementById(`subj-${index}-act-promedio`).innerText = valAct.toFixed(2);
+
+            // 2. Leer calificaciones capturadas (Escala 0-10)
             const valAvance = parseFloat(document.getElementById(`subj-${index}-avance`).value) || 0;
             const valReg = parseFloat(document.getElementById(`subj-${index}-reg`).value) || 0;
             const valExtra = parseFloat(document.getElementById(`subj-${index}-extra`).value) || 0;
 
-            // Convertir calificaciones a puntos reales
+            // 3. Convertir calificaciones a puntos reales
             const ptsAct = (valAct / 10) * wAct;
             const ptsAvance = (valAvance / 10) * wAvance;
             const ptsReg = (valReg / 10) * wReg;
@@ -158,7 +180,7 @@
             const totalAcumulado = ptsAct + ptsAvance + ptsReg + ptsExtra;
             document.getElementById(`subj-${index}-acumulado`).innerText = totalAcumulado.toFixed(2);
 
-            // Calcular cuánto falta para 7.5
+            // 4. Calcular cuánto falta para 7.5
             const ptsFaltantes = 7.5 - totalAcumulado;
             const reqElement = document.getElementById(`subj-${index}-necesario`);
             const alertElement = document.getElementById(`subj-${index}-alerta`);
@@ -186,14 +208,14 @@
     }
 
     function saveData() {
-        const inputs = document.querySelectorAll('input');
+        const inputs = document.querySelectorAll('.grade-input, #weight-avance, #weight-final');
         const data = {};
         inputs.forEach(input => { if (input.id) data[input.id] = input.value; });
-        localStorage.setItem('maestriaDirecto', JSON.stringify(data));
+        localStorage.setItem('maestriaDirectoV3', JSON.stringify(data));
     }
 
     function loadData() {
-        const saved = localStorage.getItem('maestriaDirecto');
+        const saved = localStorage.getItem('maestriaDirectoV3');
         if (saved) {
             const data = JSON.parse(saved);
             for (const key in data) {
@@ -205,8 +227,8 @@
     }
 
     function clearData() {
-        if (confirm("¿Borrar todas las calificaciones capturadas?")) {
-            localStorage.removeItem('maestriaDirecto');
+        if (confirm("¿Borrar todas las calificaciones capturadas? Esto eliminará tu historial.")) {
+            localStorage.removeItem('maestriaDirectoV3');
             document.querySelectorAll('.grade-input').forEach(input => input.value = '');
             calculateAll();
         }

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Ponderación - Maestría</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #27ae60;
+            --danger: #e74c3c;
+            --bg: #f8f9fa;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2, h3 { text-align: center; }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .config-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            background: #e9ecef;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .grid-inputs div { text-align: center; }
+        .result-box {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 15px;
+        }
+        .pass { color: #2ecc71; font-weight: bold; }
+        .fail { color: #e74c3c; font-weight: bold; }
+        hr { border: 0; border-top: 1px solid #ddd; margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Calculadora de Calificaciones</h1>
+    <p style="text-align: center;">Meta mínima aprobatoria: <strong>7.5</strong></p>
+
+    <!-- Panel de Ponderaciones -->
+    <div class="card config-panel">
+        <div style="grid-column: 1 / -1;">
+            <h3>Configuración de Ponderaciones (Puntos sobre 10)</h3>
+            <p style="font-size: 0.85em; color: #666; text-align: center;">Asegúrate de que la suma de todos los rubros sea 10.</p>
+        </div>
+        <div>
+            <label>Actividades, Foros y Cuestionarios</label>
+            <input type="number" id="weight-act" value="4" step="0.1" onchange="calculateAll()">
+        </div>
+        <div>
+            <label>Avance del Proyecto Final</label>
+            <input type="number" id="weight-avance" value="2" step="0.1" placeholder="Ej. 2" onchange="calculateAll()">
+        </div>
+        <div>
+            <label>Proyecto Final</label>
+            <input type="number" id="weight-final" value="3" step="0.1" placeholder="Ej. 3" onchange="calculateAll()">
+        </div>
+        <div>
+            <label>Actividad de Regulación</label>
+            <input type="number" id="weight-reg" value="0" step="0.1" placeholder="Ej. 0" onchange="calculateAll()">
+        </div>
+        <div>
+            <label>Puntos Extra</label>
+            <input type="number" id="weight-extra" value="1" step="0.1" onchange="calculateAll()">
+        </div>
+    </div>
+
+    <!-- Contenedor dinámico de materias -->
+    <div id="subjects-container" class="subject-grid"></div>
+</div>
+
+<script>
+    const subjects = [
+        "Finanzas",
+        "Marco Legal y Derecho Fiscal",
+        "Tecnologías de Administración de Operaciones",
+        "Derecho Civil y Mercantil"
+    ];
+
+    const container = document.getElementById('subjects-container');
+
+    // Generar el HTML para cada materia
+    subjects.forEach((subject, index) => {
+        let actInputs = '';
+        for(let i=1; i<=12; i++) {
+            actInputs += `<div><label>Act ${i}</label><input type="number" min="0" max="10" class="grade-input subj-${index}-act" onchange="calculateAll()"></div>`;
+        }
+
+        let questInputs = '';
+        for(let i=1; i<=5; i++) {
+            questInputs += `<div><label>Cuest ${i}</label><input type="number" min="0" max="10" class="grade-input subj-${index}-quest" onchange="calculateAll()"></div>`;
+        }
+
+        const html = `
+            <div class="card">
+                <h2 style="color: var(--accent);">${subject}</h2>
+                
+                <h4>Actividades (1-12)</h4>
+                <div class="grid-inputs">${actInputs}</div>
+                
+                <h4>Cuestionarios (1-5)</h4>
+                <div class="grid-inputs" style="grid-template-columns: repeat(5, 1fr);">${questInputs}</div>
+                
+                <hr>
+                <div class="grid-inputs" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <div>
+                        <label>Avance Proyecto</label>
+                        <input type="number" min="0" max="10" id="subj-${index}-avance" class="grade-input" onchange="calculateAll()">
+                    </div>
+                    <div>
+                        <label>Act. Regulación</label>
+                        <input type="number" min="0" max="10" id="subj-${index}-reg" class="grade-input" onchange="calculateAll()">
+                    </div>
+                    <div>
+                        <label>Puntos Extra Obtenidos</label>
+                        <input type="number" min="0" max="1" id="subj-${index}-extra" class="grade-input" placeholder="0 o 1" onchange="calculateAll()">
+                    </div>
+                </div>
+
+                <div class="result-box">
+                    <div>Puntaje Acumulado: <span id="subj-${index}-acumulado">0.00</span> / 10</div>
+                    <div style="margin-top: 10px;">
+                        Para sacar 7.5 necesitas en el Proyecto Final:
+                        <br><span id="subj-${index}-necesario" style="font-size: 1.5em; font-weight: bold;">--</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.innerHTML += html;
+    });
+
+    function calculateAll() {
+        // Obtener ponderaciones
+        const wAct = parseFloat(document.getElementById('weight-act').value) || 0;
+        const wAvance = parseFloat(document.getElementById('weight-avance').value) || 0;
+        const wFinal = parseFloat(document.getElementById('weight-final').value) || 0;
+        const wReg = parseFloat(document.getElementById('weight-reg').value) || 0;
+        
+        subjects.forEach((_, index) => {
+            // Calcular promedio de actividades y cuestionarios
+            let actSum = 0, actCount = 0;
+            document.querySelectorAll(`.subj-${index}-act, .subj-${index}-quest`).forEach(input => {
+                if(input.value !== '') {
+                    actSum += parseFloat(input.value);
+                    actCount++;
+                }
+            });
+            const actAvg = actCount > 0 ? (actSum / actCount) : 0;
+            const actPoints = (actAvg / 10) * wAct;
+
+            // Obtener otras calificaciones
+            const vAvance = parseFloat(document.getElementById(`subj-${index}-avance`).value) || 0;
+            const vReg = parseFloat(document.getElementById(`subj-${index}-reg`).value) || 0;
+            const vExtra = parseFloat(document.getElementById(`subj-${index}-extra`).value) || 0; // Puntos directos
+
+            // Calcular puntos obtenidos de avance y regulación
+            const avancePoints = (vAvance / 10) * wAvance;
+            const regPoints = (vReg / 10) * wReg;
+
+            // Puntaje total acumulado sin contar el proyecto final
+            const accumulatedPoints = actPoints + avancePoints + regPoints + vExtra;
+            document.getElementById(`subj-${index}-acumulado`).innerText = accumulatedPoints.toFixed(2);
+
+            // Calcular cuánto falta para 7.5
+            const requiredPoints = 7.5 - accumulatedPoints;
+            const targetElement = document.getElementById(`subj-${index}-necesario`);
+
+            if(requiredPoints <= 0) {
+                targetElement.innerText = "¡Ya aprobaste!";
+                targetElement.className = "pass";
+            } else if (wFinal === 0) {
+                targetElement.innerText = "Define peso del Proyecto";
+                targetElement.className = "";
+            } else {
+                // Traducir los puntos que faltan a una calificación sobre 10
+                const requiredGrade = (requiredPoints * 10) / wFinal;
+                
+                if(requiredGrade > 10) {
+                    targetElement.innerText = `${requiredGrade.toFixed(2)} (Matemáticamente imposible)`;
+                    targetElement.className = "fail";
+                } else {
+                    targetElement.innerText = requiredGrade.toFixed(2);
+                    targetElement.className = "";
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

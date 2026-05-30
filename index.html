@@ -10,6 +10,7 @@
             --secondary: #34495e;
             --accent: #27ae60;
             --danger: #e74c3c;
+            --warning: #f39c12;
             --bg: #f8f9fa;
         }
         body {
@@ -20,80 +21,43 @@
             padding: 20px;
         }
         h1, h2, h3 { text-align: center; }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1100px; margin: 0 auto; }
         .header-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
         }
         .btn-clear {
-            background-color: var(--danger);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
+            background-color: var(--danger); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;
         }
         .btn-clear:hover { background-color: #c0392b; }
         .card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .config-panel {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            background: #e9ecef;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; background: #e9ecef;
         }
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-            font-size: 0.9em;
+        .setup-box {
+            background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; border-radius: 5px; margin-bottom: 20px;
         }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9em; }
         input[type="number"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
+            width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
         }
-        .subject-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        .grid-inputs {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .grid-inputs div { text-align: center; }
+        .subject-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .grid-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
         .result-box {
-            background: var(--primary);
-            color: white;
-            padding: 15px;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 1.1em;
-            margin-top: 15px;
+            background: var(--primary); color: white; padding: 20px; border-radius: 6px; text-align: center; font-size: 1.1em; margin-top: 15px;
         }
-        .exact-number {
-            font-size: 1.4em;
-            font-weight: bold;
-            color: #f1c40f; 
+        .breakdown-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 0.9em;
         }
-        .warning { color: #e74c3c; font-size: 0.85em; display: block; margin-top: 5px;}
+        .breakdown-grid div { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; }
+        .exact-number { font-size: 1.6em; font-weight: bold; color: #f1c40f; display: block; margin-top: 5px; }
+        .warning-text { color: #e74c3c; font-size: 0.85em; display: block; margin-top: 5px; font-weight: bold;}
         hr { border: 0; border-top: 1px solid #ddd; margin: 20px 0; }
+        
+        @media (max-width: 768px) {
+            .grid-inputs, .breakdown-grid { grid-template-columns: 1fr 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -103,34 +67,37 @@
         <h1>Ponderador de Calificaciones</h1>
         <button class="btn-clear" onclick="clearData()">Borrar Historial</button>
     </div>
-    <p style="text-align: center;">Meta mínima aprobatoria: <strong>7.50</strong></p>
+    <p style="text-align: center; font-size: 1.2em;">Meta mínima aprobatoria: <strong>7.50</strong></p>
 
+    <!-- Panel de Ponderaciones Globales -->
     <div class="card config-panel">
         <div style="grid-column: 1 / -1;">
-            <h3>Configuración de Ponderaciones (Puntos sobre 10)</h3>
+            <h3>Configuración de Ponderaciones (Puntos Totales: 10)</h3>
+            <p style="text-align: center; font-size: 0.85em; color: #555;">Todas las calificaciones se deben ingresar en escala del 0 al 10.</p>
         </div>
         <div>
-            <label>Foros y Cuestionarios</label>
-            <input type="number" id="weight-act" value="4" step="0.1" onchange="calculateAndSave()">
+            <label>Foros/Actividades (Fijo)</label>
+            <input type="number" id="weight-act" value="4" disabled style="background: #e0e0e0; cursor: not-allowed;">
         </div>
         <div>
             <label>Avance del Proyecto</label>
-            <input type="number" id="weight-avance" value="2" step="0.1" onchange="calculateAndSave()">
+            <input type="number" id="weight-avance" value="1.5" step="0.1" onchange="calculateAndSave()">
         </div>
         <div>
             <label>Proyecto Final</label>
-            <input type="number" id="weight-final" value="3" step="0.1" onchange="calculateAndSave()">
+            <input type="number" id="weight-final" value="1.5" step="0.1" onchange="calculateAndSave()">
         </div>
         <div>
-            <label>Act. Regulación</label>
-            <input type="number" id="weight-reg" value="0" step="0.1" onchange="calculateAndSave()">
+            <label>Act. Regulación (Fijo)</label>
+            <input type="number" id="weight-reg" value="2" disabled style="background: #e0e0e0; cursor: not-allowed;">
         </div>
         <div>
-            <label>Puntos Extra</label>
-            <input type="number" id="weight-extra" value="1" step="0.1" onchange="calculateAndSave()">
+            <label>Puntos Extra (Fijo)</label>
+            <input type="number" id="weight-extra" value="1" disabled style="background: #e0e0e0; cursor: not-allowed;">
         </div>
     </div>
 
+    <!-- Contenedor de materias -->
     <div id="subjects-container" class="subject-grid"></div>
 </div>
 
@@ -144,23 +111,30 @@
 
     const container = document.getElementById('subjects-container');
 
-    // Generar la interfaz de materias
     subjects.forEach((subject, index) => {
         let actInputs = '';
         for(let i=1; i<=12; i++) {
-            actInputs += `<div><label>Act ${i}</label><input type="number" id="subj-${index}-act-${i}" class="grade-input subj-${index}-group" onchange="calculateAndSave()"></div>`;
+            actInputs += `<div><label>Actividad ${i}</label><input type="number" min="0" max="10" id="subj-${index}-act-${i}" class="grade-input subj-${index}-group" placeholder="Ej: 10" onchange="calculateAndSave()"></div>`;
         }
 
         let questInputs = '';
         for(let i=1; i<=5; i++) {
-            questInputs += `<div><label>Cuest ${i}</label><input type="number" id="subj-${index}-quest-${i}" class="grade-input subj-${index}-group" onchange="calculateAndSave()"></div>`;
+            questInputs += `<div><label>Cuestionario ${i}</label><input type="number" min="0" max="10" id="subj-${index}-quest-${i}" class="grade-input subj-${index}-group" placeholder="Ej: 8" onchange="calculateAndSave()"></div>`;
         }
 
         const html = `
             <div class="card">
-                <h2 style="color: var(--accent); margin-bottom: 5px;">${subject}</h2>
+                <h2 style="color: var(--accent); margin-bottom: 15px;">${subject}</h2>
                 
-                <h4>Actividades (Dejar en blanco si no aplica)</h4>
+                <div class="setup-box">
+                    <label style="color: #856404; font-size: 1.1em;">⚠️ Parámetro Obligatorio:</label>
+                    <p style="margin: 5px 0 10px 0; font-size: 0.9em; color: #666;">
+                        Para calcular cuánto vale cada tarea exacta, ¿Cuántas actividades, foros y cuestionarios <strong>EN TOTAL</strong> tendrá el semestre en esta materia? (Ej: Si son 8 actividades y 2 cuestionarios, escribe 10).
+                    </p>
+                    <input type="number" id="subj-${index}-total-tasks" min="1" max="20" style="width: 150px; border: 2px solid #ffc107;" placeholder="Total de tareas" onchange="calculateAndSave()">
+                </div>
+
+                <h4>Actividades (Dejar en blanco si aún no se evalúa o no existe)</h4>
                 <div class="grid-inputs">${actInputs}</div>
                 
                 <h4>Cuestionarios</h4>
@@ -169,25 +143,37 @@
                 <hr>
                 <div class="grid-inputs" style="grid-template-columns: 1fr 1fr 1fr;">
                     <div>
-                        <label>Avance Proyecto</label>
-                        <input type="number" id="subj-${index}-avance" class="grade-input" onchange="calculateAndSave()">
+                        <label>Avance Proyecto (0-10)</label>
+                        <input type="number" min="0" max="10" id="subj-${index}-avance" class="grade-input" onchange="calculateAndSave()">
                     </div>
                     <div>
-                        <label>Act. Regulación</label>
-                        <input type="number" id="subj-${index}-reg" class="grade-input" onchange="calculateAndSave()">
+                        <label>Act. Regulación (0-10)</label>
+                        <input type="number" min="0" max="10" id="subj-${index}-reg" class="grade-input" onchange="calculateAndSave()">
                     </div>
                     <div>
-                        <label>Puntos Extra</label>
-                        <input type="number" id="subj-${index}-extra" class="grade-input" onchange="calculateAndSave()">
+                        <label>Puntos Extra (0-10)</label>
+                        <input type="number" min="0" max="10" id="subj-${index}-extra" class="grade-input" onchange="calculateAndSave()">
                     </div>
                 </div>
 
                 <div class="result-box">
-                    <div>Puntos Acumulados: <strong id="subj-${index}-acumulado">0.00</strong> / 10</div>
-                    <div style="margin-top: 10px;">
-                        Para 7.50 necesitas en el Proyecto Final:
-                        <br><span id="subj-${index}-necesario" class="exact-number">0.00</span>
-                        <span id="subj-${index}-alerta" class="warning"></span>
+                    <div><strong>DESGLOSE DE PUNTOS ACUMULADOS REALES:</strong></div>
+                    <div class="breakdown-grid">
+                        <div>Act/Cuest: <br><strong id="subj-${index}-pts-act">0.00</strong> / 4.00 pts</div>
+                        <div>Avance: <br><strong id="subj-${index}-pts-avance">0.00</strong> / <span id="subj-${index}-max-avance">1.50</span> pts</div>
+                        <div>Regulación: <br><strong id="subj-${index}-pts-reg">0.00</strong> / 2.00 pts</div>
+                        <div>Extra: <br><strong id="subj-${index}-pts-extra">0.00</strong> / 1.00 pts</div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; font-size: 1.2em;">
+                        Total Acumulado al Momento: 
+                        <strong id="subj-${index}-acumulado" style="color: #2ecc71; font-size: 1.3em;">0.00</strong> / 10.00
+                    </div>
+
+                    <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px;">
+                        Calificación que necesitas sacar (del 0 al 10) en el Proyecto Final para llegar a 7.50:
+                        <span id="subj-${index}-necesario" class="exact-number">0.00</span>
+                        <span id="subj-${index}-alerta" class="warning-text"></span>
                     </div>
                 </div>
             </div>
@@ -195,100 +181,126 @@
         container.innerHTML += html;
     });
 
-    // Función principal de cálculo y guardado
     function calculateAndSave() {
         saveToLocalStorage();
         calculateGrades();
     }
 
-    // Cálculos matemáticos
     function calculateGrades() {
-        const wAct = parseFloat(document.getElementById('weight-act').value) || 0;
+        const wAct = 4;
+        const wReg = 2;
+        const wExtra = 1;
         const wAvance = parseFloat(document.getElementById('weight-avance').value) || 0;
         const wFinal = parseFloat(document.getElementById('weight-final').value) || 0;
-        const wReg = parseFloat(document.getElementById('weight-reg').value) || 0;
         
         subjects.forEach((_, index) => {
-            let actSum = 0, actCount = 0;
+            // Actualizar interfaz visual del máximo de Avance
+            document.getElementById(`subj-${index}-max-avance`).innerText = wAvance.toFixed(2);
+
+            // 1. Cálculo de Actividades y Cuestionarios basado en el TOTAL del semestre
+            const totalTasks = parseInt(document.getElementById(`subj-${index}-total-tasks`).value) || 0;
+            let sumOfGrades = 0;
             
-            // Recorrer actividades y cuestionarios
             document.querySelectorAll(`.subj-${index}-group`).forEach(input => {
-                // EXTREMADAMENTE IMPORTANTE: Solo cuenta si NO está en blanco
                 if(input.value.trim() !== '') {
-                    actSum += parseFloat(input.value);
-                    actCount++; // Si hay un 0 escrito, sí aumenta el contador (afecta promedio)
+                    sumOfGrades += parseFloat(input.value); // Suma las calificaciones base 10
                 }
             });
-            
-            const actAvg = actCount > 0 ? (actSum / actCount) : 0;
-            const actPoints = (actAvg / 10) * wAct;
 
+            let actPoints = 0;
+            if (totalTasks > 0) {
+                // Formula real acumulada: (Suma de calificaciones / Calificación Máxima Posible Total) * Peso
+                const maxPossibleGrade = totalTasks * 10;
+                actPoints = (sumOfGrades / maxPossibleGrade) * wAct;
+            }
+
+            // 2. Cálculo del resto (Escala 0 a 10)
             const vAvance = parseFloat(document.getElementById(`subj-${index}-avance`).value) || 0;
             const vReg = parseFloat(document.getElementById(`subj-${index}-reg`).value) || 0;
             const vExtra = parseFloat(document.getElementById(`subj-${index}-extra`).value) || 0;
 
             const avancePoints = (vAvance / 10) * wAvance;
             const regPoints = (vReg / 10) * wReg;
+            const extraPoints = (vExtra / 10) * wExtra;
 
-            const accumulatedPoints = actPoints + avancePoints + regPoints + vExtra;
-            document.getElementById(`subj-${index}-acumulado`).innerText = accumulatedPoints.toFixed(4);
+            // 3. Pintar el desglose
+            document.getElementById(`subj-${index}-pts-act`).innerText = actPoints.toFixed(2);
+            document.getElementById(`subj-${index}-pts-avance`).innerText = avancePoints.toFixed(2);
+            document.getElementById(`subj-${index}-pts-reg`).innerText = regPoints.toFixed(2);
+            document.getElementById(`subj-${index}-pts-extra`).innerText = extraPoints.toFixed(2);
+
+            // 4. Suma total y proyección
+            const accumulatedPoints = actPoints + avancePoints + regPoints + extraPoints;
+            document.getElementById(`subj-${index}-acumulado`).innerText = accumulatedPoints.toFixed(2);
 
             const requiredPoints = 7.5 - accumulatedPoints;
             const targetElement = document.getElementById(`subj-${index}-necesario`);
             const alertElement = document.getElementById(`subj-${index}-alerta`);
 
-            if (wFinal === 0) {
-                targetElement.innerText = "Falta peso";
+            if (wFinal <= 0) {
+                targetElement.innerText = "Error: El Proyecto Final no tiene peso";
                 alertElement.innerText = "";
+            } else if (totalTasks === 0) {
+                targetElement.innerText = "Falta ingresar tareas totales";
+                alertElement.innerText = "Por favor llena el recuadro amarillo para calcular.";
             } else {
                 const requiredGrade = (requiredPoints * 10) / wFinal;
-                targetElement.innerText = requiredGrade.toFixed(4);
                 
-                if(requiredGrade > 10) {
-                    alertElement.innerText = "(Imposible matemáticamente, ocupa más de 10)";
-                } else {
+                if (requiredGrade <= 0) {
+                    targetElement.innerText = "¡Ya estás aprobado!";
+                    targetElement.style.color = "#2ecc71";
                     alertElement.innerText = "";
+                } else {
+                    targetElement.innerText = requiredGrade.toFixed(2);
+                    targetElement.style.color = "#f1c40f";
+                    
+                    if(requiredGrade > 10) {
+                        alertElement.innerText = "Alerta: Matemáticamente imposible (requiere más de 10).";
+                    } else {
+                        alertElement.innerText = "";
+                    }
                 }
             }
         });
     }
 
-    // Funciones de LocalStorage (Guardado en navegador)
     function saveToLocalStorage() {
         const allInputs = document.querySelectorAll('input');
         const data = {};
         allInputs.forEach(input => {
-            if(input.id) {
-                data[input.id] = input.value;
-            }
+            if(input.id) data[input.id] = input.value;
         });
-        localStorage.setItem('maestriaGradesData', JSON.stringify(data));
+        localStorage.setItem('maestriaGradesExact', JSON.stringify(data));
     }
 
     function loadFromLocalStorage() {
-        const savedData = localStorage.getItem('maestriaGradesData');
+        const savedData = localStorage.getItem('maestriaGradesExact');
         if(savedData) {
             const data = JSON.parse(savedData);
             for(const key in data) {
                 const input = document.getElementById(key);
-                if(input) {
-                    input.value = data[key];
-                }
+                if(input) input.value = data[key];
             }
         }
-        calculateGrades(); // Calcular al cargar
+        calculateGrades();
     }
 
     function clearData() {
-        if(confirm("¿Estás seguro de que quieres borrar todos los datos de las calificaciones?")) {
-            localStorage.removeItem('maestriaGradesData');
-            const allInputs = document.querySelectorAll('input.grade-input');
-            allInputs.forEach(input => input.value = '');
+        if(confirm("¿Estás seguro de que quieres borrar absolutamente todo tu historial?")) {
+            localStorage.removeItem('maestriaGradesExact');
+            document.querySelectorAll('input').forEach(input => {
+                // No borrar los pesos que están predefinidos
+                if(!input.id.startsWith('weight-')) {
+                    input.value = '';
+                }
+            });
+            // Restaurar pesos modificables a default
+            document.getElementById('weight-avance').value = "1.5";
+            document.getElementById('weight-final').value = "1.5";
             calculateGrades();
         }
     }
 
-    // Cargar datos automáticamente al abrir la página
     window.onload = loadFromLocalStorage;
 </script>
 
